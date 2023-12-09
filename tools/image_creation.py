@@ -11,7 +11,7 @@ client = OpenAI(
 
 
 async def create_images(agent, prompts: str, paths: str, model="dall-e-3"):
-    for text, path in zip(texts, paths):
+    for text, path in zip(prompts, paths):
         await create_image(text, path, model)
 
 

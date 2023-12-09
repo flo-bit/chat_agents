@@ -1,14 +1,30 @@
 # python starter chatgpt
 
-starter code for using chatgpt, includes:
+starter code for using chatgpt agents, includes:
 
 - system prompt
 - debug logging
 - token counting
 - tool calling
 - some tools
+- agent communication
 
-## plans
+## Usage
 
-- [ ] add more tools
-- [ ] add a more complex chat agent with better memory and communication tools
+create and switch to the virtual environment
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+```
+
+install the requirements
+
+```bash
+pip3 install -r requirements.txt
+```
+
+run the agent
+
+```bash
+python3 main.py
+```
