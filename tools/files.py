@@ -3,7 +3,8 @@ import re
 
 
 async def add_to_file(path: str, content: str, at_start: bool = False):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.dirname(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
     if at_start:
         with open(path, "a") as f:
             f.write(content)

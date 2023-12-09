@@ -42,7 +42,7 @@ class ChatAgent:
         self.answer_json = answer_json
         self.loop_function_call = loop_function_call
 
-        self.tools = ToolChain(tools) if tools else None
+        self.tools = ToolChain(tools, debug=debug) if tools else None
 
         self.reset_token_count = reset_token_count
         self.all_time_tokens_input = 0
@@ -78,7 +78,8 @@ class ChatAgent:
 
         # write to file
         if self.chat_file:
-            os.makedirs(os.path.dirname(self.chat_file), exist_ok=True)
+            if os.path.dirname(self.chat_file):
+                os.makedirs(os.path.dirname(self.chat_file), exist_ok=True)
 
             with open(self.chat_file, "w") as f:
                 f.write(str(self))
@@ -97,7 +98,8 @@ class ChatAgent:
         if self.debug:
             print(message)
         if self.log_file:
-            os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
+            if os.path.dirname(self.log_file):
+                os.makedirs(os.path.dirname(self.log_file), exist_ok=True)
 
             with open(self.log_file, "a") as f:
                 f.write(message + "\n")

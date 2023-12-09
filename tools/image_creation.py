@@ -30,7 +30,8 @@ async def create_image(text: str, path: str, model="dall-e-3"):
     image = requests.get(image_url).content
 
     # save image
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    if os.path.dirname(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "wb") as f:
         f.write(image)
 
