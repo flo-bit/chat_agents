@@ -1,7 +1,11 @@
 import os
 import re
 
-from chat_agent import ChatAgent
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from chat_agent import ChatAgent
 
 
 async def add_to_file(agent, path: str, content: str, at_start: bool = False):
@@ -56,7 +60,7 @@ async def change_file(agent, path: str, new: str, old_string: str = "", old_rege
     return f"file at {path} changed"
 
 
-async def read_file(agent: ChatAgent, path: str):
+async def read_file(agent: "ChatAgent", path: str):
     # check if file can be read
     with open(path, "r") as f:
         _ = f.read()
@@ -74,10 +78,11 @@ async def read_files(agent, paths: list):
     return content
 
 
-async def forget_file(agent: ChatAgent, path: str):
+async def forget_file(agent: "ChatAgent", path: str):
     agent.remove_memory(path)
 
     return f"file at {path} forgotten"
+
 
 async def replace_file(agent, path: str, content: str):
     if os.path.dirname(path):

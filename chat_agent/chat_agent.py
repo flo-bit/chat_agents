@@ -5,7 +5,7 @@ from typing import Literal
 import tiktoken
 import json
 
-from tools.tools import ToolChain
+from chat_agent.tools import ToolChain
 
 load_dotenv()
 
@@ -16,6 +16,50 @@ client = OpenAI(
 Role = Literal["user", "assistant", "system"]
 
 enc = tiktoken.encoding_for_model("gpt-4")
+
+
+default_commands = [
+    {
+        "name": "reset",
+        "function": lambda agent, message: agent.reset(),
+        "description": "- resets the chat agent"
+    },
+    {
+        "name": "exit",
+        "function": lambda agent, message: exit(),
+        "description": "- exits the chat agent"
+    },
+    {
+        "name": "info",
+        "function": lambda agent, message: print(agent.info()),
+        "description": "- prints info about the chat agent"
+    },
+    {
+        "name": "history",
+        "function": lambda agent, message: print(agent),
+        "description": "- prints the chat history"
+    },
+    {
+        "name": "clear memory",
+        "function": lambda agent, message: agent.clear_memory(),
+        "description": "- clears the memory of the chat agent"
+    },
+    {
+        "name": "read",
+        "function": lambda agent, message: agent.add_memory_file(message.split("read ")[1]),
+        "description": "<file> - adds a file to the memory of the chat agent"
+    },
+    {
+        "name": "debug",
+        "function": lambda agent, message: agent.set_debug("on" in message),
+        "description": "<on/off> - turns debug mode on or off"
+    },
+    {
+        "name": "help",
+        "function": lambda agent, message: print(agent.all_commands()),
+        "description": "- prints all available commands"
+    }
+]
 
 
 class ChatAgentMemoryConfig:
@@ -48,7 +92,8 @@ class ChatAgentConfig:
                  loop_function_call: bool = True,
                  reset_token_count: bool = False,
                  log_file: str = None,
-                 chat_file: str = None):
+                 chat_file: str = None,
+                 commands: list = default_commands):
         self.name = name
         self.description = description
         self.memory_config = memory_config
@@ -62,6 +107,8 @@ class ChatAgentConfig:
         self.reset_token_count = reset_token_count
         self.log_file = log_file
         self.chat_file = chat_file
+
+        self.commands = commands or []
 
 
 class ChatAgent:
@@ -79,7 +126,7 @@ class ChatAgent:
                 {"role": "system", "content": self.config.system_prompt})
 
         self.tools = ToolChain(
-            tools, debug=self.config.debug) if tools else None
+            tools, debug=self.config.debug, agent=self)
 
         self.all_time_tokens_input = 0
         self.all_time_tokens_output = 0
@@ -99,20 +146,50 @@ class ChatAgent:
         self.clear_memory()
 
     def info(self):
-        info = f"ChatAgent: \n\nmodel: {self.config.model}\n"
+        info = f"ChatAgent named {self.config.name}:\n\ndescription: {self.config.description or 'No description'}\nmodel: {self.config.model}\n\n"
+
+        if self.config.debug:
+            info += "debug mode: on\n\n"
+        else:
+            info += "debug mode: off\n\n"
+
         if self.config.system_prompt:
             info += f"system prompt: {self.config.system_prompt}\n\n"
 
+        if self.memory_files:
+            info += "memory files: \n"
+            for memory_file in self.memory_files:
+                info += f"- {memory_file}\n"
+            info += "\n"
+
+        if self.config.memory_config.always_in_memory_files:
+            info += "always in memory files: \n"
+            for memory_file in self.config.memory_config.always_in_memory_files:
+                info += f"- {memory_file}\n"
+            info += "\n"
+
         if self.tools:
             info += "available tools: \n"
-            for tool_dict in self.tools.tool_dicts:
+            for tool_dict in self.tools.tool_info:
                 info += f"- {tool_dict['function']['name']}\n"
             info += "\n"
+
+        info += self.all_commands() + "\n"
 
         info += f"Input token count: {self.all_time_tokens_input}\n"
         info += f"Output token count: {self.all_time_tokens_output}\n"
 
         return info
+
+    def all_commands(self):
+        if not self.config.commands:
+            return ""
+
+        commands = "available commands:\n"
+        for command in self.config.commands:
+            commands += f"- {command['name']} {command['description']}\n"
+
+        return commands
 
     def add_message_to_history(self, role: Role, content: str):
         self.log(f"{role}: {content}")
@@ -171,6 +248,10 @@ class ChatAgent:
             self.memory_files.remove(path)
         else:
             raise FileNotFoundError(f"file {path} not in memory")
+
+    def set_debug(self, debug: bool):
+        self.config.debug = debug
+        self.tools.debug = debug
 
     def add_memories_to_messages(self, messages: list):
         for memory_file in self.memory_files:
@@ -255,6 +336,21 @@ class ChatAgent:
             if self.config.loop_function_call:
                 return await self.react()
 
+    def check_for_commands(self, message: str):
+        if not self.config.commands:
+            return False
+
+        for command in self.config.commands:
+            if message.startswith(command["name"]):
+                self.log(f"command {command['name']} triggered")
+                command["function"](self, message)
+                return True
+
+        return False
+
     async def send_message(self, message: str, role: Role = "user"):
+        if role == "user" and self.check_for_commands(message):
+            return ""
+
         self.add_message_to_history(role, message)
         return await self.react()

@@ -1,11 +1,11 @@
 import asyncio
-from chat_agent import ChatAgent, ChatAgentConfig
-from tools.coding import tool_run_python_test
-from tools.files import tool_list_files, tool_change_file, tool_add_to_file
-from tools.text_to_speech import tool_text_to_speech, tool_texts_to_speeches
-from tools.speech_to_text import tool_speech_to_text
-from tools.image_creation import tool_create_image
-from tools.send_message import create_send_message_tool
+from chat_agent.chat_agent import ChatAgent, ChatAgentConfig
+from chat_agent.tools.coding import tool_run_python_test
+from chat_agent.tools.files import tool_list_files, tool_change_file, tool_add_to_file
+from chat_agent.tools.text_to_speech import tool_text_to_speech, tool_texts_to_speeches
+from chat_agent.tools.speech_to_text import tool_speech_to_text
+from chat_agent.tools.image_creation import tool_create_image
+from chat_agent.tools.send_message import create_send_message_tool
 
 
 creative_agent = ChatAgent(tools=[tool_create_image], config=ChatAgentConfig(

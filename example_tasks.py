@@ -1,11 +1,10 @@
 import asyncio
 from chat_agent.chat_agent import ChatAgent
-from chat_agent.tools import tool_list_files, tool_read_file, tool_replace_file, tool_text_to_speech, tool_create_image
-from chat_agent.tools import tool_add_task, tool_remove_task, tool_list_tasks
+from chat_agent.tools import tool_add_task, tool_remove_task, tool_list_tasks, tool_change_task_status, tool_get_first_task_with_status
 
 # give your agent some tools to work with
 agent = ChatAgent(
-    tools=[tool_list_files, tool_read_file, tool_replace_file, tool_text_to_speech, tool_create_image], debug=False)
+    tools=[tool_add_task, tool_remove_task, tool_list_tasks, tool_change_task_status, tool_get_first_task_with_status], debug=True)
 
 
 # run the agent in a loop
