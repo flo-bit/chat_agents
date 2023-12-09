@@ -92,6 +92,9 @@ class ChatAgentConfig:
                  max_memory_files=3,
                  show_line_numbers=False,
                  check_for_commands=False,
+                 save_file=None,
+                 load_from_file=True,
+                 save_to_file=True,
                  tools=None):
         self.name = name
         self.description = description
@@ -117,4 +120,7 @@ class ChatAgentConfig:
         self.max_memory_files = max_memory_files
         self.show_line_numbers = show_line_numbers
 
+        self.save_file = save_file
+        self.load_from_file = load_from_file
+        self.save_to_file = save_to_file
         self.tools = tools or []

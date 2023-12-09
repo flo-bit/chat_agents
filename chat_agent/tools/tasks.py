@@ -4,58 +4,57 @@ if TYPE_CHECKING:
     from chat_agent import ChatAgent
 
 
+def check_task_data(agent: "ChatAgent"):
+    if 'tasks' not in agent.data:
+        agent.data['tasks'] = []
+
 async def add_task(agent, task: str, status: str = "todo", data: dict = None):
-    if not hasattr(agent, 'tasks') or agent.tasks is None:
-        agent.tasks = []
+    check_task_data(agent)
 
     if data is None:
         data = {}
 
     data['status'] = status
 
-    agent.tasks.append((task, data))
+    agent.data['tasks'].append((task, data))
 
     return f"Task {task} added to tasks\n\n" + await list_tasks(agent)
 
 
 async def remove_task(agent, task: str):
-    if not hasattr(agent, 'tasks') or agent.tasks is None:
-        agent.tasks = []
+    check_task_data(agent)
 
-    agent.tasks = [t for t in agent.tasks if t[0] != task]
+    agent.data['tasks'] = [t for t in agent.data['tasks'] if t[0] != task]
 
     return f"Task {task} removed from tasks\n\n" + await list_tasks(agent)
 
 
 async def change_task_status(agent, task: str, status: str):
-    if not hasattr(agent, 'tasks') or agent.tasks is None:
-        agent.tasks = []
+    check_task_data(agent)
 
-    for i, t in enumerate(agent.tasks):
+    for i, t in enumerate(agent.data['tasks']):
         if t[0] == task:
-            agent.tasks[i][1]['status'] = status
+            agent.data['tasks'][i][1]['status'] = status
 
     return f"Task {task} changed to status {status}\n\n" + await list_tasks(agent)
 
 
 async def list_tasks(agent):
-    if not hasattr(agent, 'tasks') or agent.tasks is None:
-        agent.tasks = []
+    check_task_data(agent)
 
-    tasks = '\n'.join([f'{t[0]}: {t[1]}' for t in agent.tasks]) if len(
-        agent.tasks) > 0 else 'No tasks'
+    tasks = '\n'.join([f'{t[0]}: {t[1]}' for t in agent.data['tasks']]) if len(
+        agent.data['tasks']) > 0 else 'No tasks'
     return f"All tasks:\n{tasks}"
 
 
 async def get_first_task_with_status(agent, status: str):
-    if not hasattr(agent, 'tasks') or agent.tasks is None:
-        agent.tasks = []
+    check_task_data(agent)
 
-    for t in agent.tasks:
+    for t in agent.data['tasks']:
         if t[1]['status'] == status:
             return f"Task: {t[0]}: {t[1]['status']}"
 
-    return None
+    return "No task found with status " + status
 
 tool_add_task = {
     "info": {

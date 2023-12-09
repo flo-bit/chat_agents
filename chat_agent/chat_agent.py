@@ -6,8 +6,9 @@ import tiktoken
 import json
 import re
 
-from chat_agent.chat_agent_config import ChatAgentConfig
+from chat_agent.chat_agent_config import ChatAgentConfig, default_commands
 from chat_agent.tools import ToolChain
+from chat_agent.tools import tool_functions
 
 load_dotenv()
 
@@ -41,6 +42,15 @@ class ChatAgent:
 
         self.memory_files = self.config.start_memory_files
 
+        # this can be used by tools to store data
+        self.data = {}
+
+        if self.config.save_file:
+            if os.path.isfile(self.config.save_file) and self.config.load_from_file:
+                self.load_from_file(self.config.save_file)
+            else:
+                self.save_to_file(self.config.save_file)
+
     def reset(self):
         self.history = []
         if self.config.system_prompt:
@@ -51,7 +61,69 @@ class ChatAgent:
             self.all_time_tokens_input = 0
             self.all_time_tokens_output = 0
 
+        self.data = {}
+
+        # clear memory will also save the agent
         self.clear_memory()
+
+    def try_save(self):
+        if self.config.save_file and self.config.save_to_file:
+            if os.path.dirname(self.config.save_file):
+                os.makedirs(os.path.dirname(
+                    self.config.save_file), exist_ok=True)
+
+            self.save_to_file(self.config.save_file)
+
+    def save_to_file(self, path: str):
+        self.log(f"saving to file {path}")
+        config_dict = self.config.__dict__
+        # remove tools from config
+        data = {
+            "data": self.data,
+            "config": config_dict,
+            "memory_files": self.memory_files,
+            "history": self.history,
+            "all_time_tokens_input": self.all_time_tokens_input,
+            "all_time_tokens_output": self.all_time_tokens_output
+        }
+
+        json_string = json.dumps(data, default=lambda x: x.__dict__)
+        with open(path, "w") as f:
+            f.write(json_string)
+
+    def load_from_file(self, path: str):
+        custom_commands = self.config.commands
+        custom_tools = self.config.tools
+
+        self.log(f"loading from file {path}")
+        with open(path, "r") as f:
+            data = json.loads(f.read())
+
+        self.data = data["data"]
+        self.config = ChatAgentConfig(**data["config"])
+
+        # go through all tools and custom tools and find the right functions
+        for tool in self.config.tools:
+            name = tool["info"]["function"]["name"]
+            if name in tool_functions:
+                tool["function"] = tool_functions[name]
+            else:
+                for custom_tool in custom_tools:
+                    if name == custom_tool["info"]["function"]["name"]:
+                        tool["function"] = custom_tool["function"]
+
+        # go through all commands and find the right functions
+        for command in self.config.commands:
+            for default_command in default_commands + custom_commands:
+                if command["name"] == default_command["name"]:
+                    command["function"] = default_command["function"]
+
+        self.tools = ToolChain(
+            self.config.tools, debug=self.config.debug, agent=self)
+        self.memory_files = data["memory_files"]
+        self.history = data["history"]
+        self.all_time_tokens_input = data["all_time_tokens_input"]
+        self.all_time_tokens_output = data["all_time_tokens_output"]
 
     def info(self):
         info = f"ChatAgent named {self.config.name}:\n\ndescription: {self.config.description or 'No description'}\nmodel: {self.config.model}\n\n"
@@ -113,6 +185,8 @@ class ChatAgent:
             with open(self.config.chat_file, "w") as f:
                 f.write(str(self))
 
+        self.try_save()
+
     def __str__(self):
         string = "\n"
         for message in self.history:
@@ -139,6 +213,8 @@ class ChatAgent:
         if len(self.memory_files) > self.config.max_memory_files:
             self.memory_files.pop(0)
 
+        self.try_save()
+
     def has_memory(self, path: str):
         if path in self.config.always_in_memory_files:
             return True
@@ -151,9 +227,12 @@ class ChatAgent:
     def clear_memory(self):
         self.memory_files = self.config.start_memory_files
 
+        self.try_save()
+
     def remove_memory(self, path: str):
         if path in self.memory_files:
             self.memory_files.remove(path)
+            self.try_save()
         else:
             raise FileNotFoundError(f"file {path} not in memory")
 

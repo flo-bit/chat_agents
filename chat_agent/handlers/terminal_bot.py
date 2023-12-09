@@ -9,7 +9,7 @@ load_dotenv()
 
 default_config = ChatAgentConfig(
     check_for_commands=True,
-    debug=False,
+    debug=True,
     tools=[tool_list_files, tool_read_file, tool_replace_file,
            tool_text_to_speech, tool_create_image],
     system_prompt="You are a helpful chat bot.")
@@ -24,9 +24,10 @@ class TerminalBot():
         self.start()
 
     def start(self):
-        self.agent.add_message_to_history(
-            "assistant", self.start_message)
-        print(self.start_message)
+        if len(self.agent.history) == 0:
+            self.agent.add_message_to_history(
+                "assistant", self.start_message)
+            print(self.start_message)
 
         asyncio.run(self.chat())
 
