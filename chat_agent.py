@@ -169,6 +169,8 @@ class ChatAgent:
     def remove_memory(self, path: str):
         if path in self.memory_files:
             self.memory_files.remove(path)
+        else:
+            raise FileNotFoundError(f"file {path} not in memory")
 
     def add_memories_to_messages(self, messages: list):
         for memory_file in self.memory_files:

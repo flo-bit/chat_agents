@@ -1,6 +1,8 @@
 import os
 import re
 
+from chat_agent import ChatAgent
+
 
 async def add_to_file(agent, path: str, content: str, at_start: bool = False):
     if os.path.dirname(path):
@@ -18,36 +20,6 @@ async def add_to_file(agent, path: str, content: str, at_start: bool = False):
             f.write(file_content)
 
     return f"content added to file at {path}"
-
-
-async def change_file(agent, path: str, new: str, old_string: str = "", old_regex: str = None):
-    with open(path, "r") as f:
-        content = f.read()
-
-    if old_regex:
-        content = re.sub(old_regex, new, content)
-    else:
-        content = content.replace(old_string, new)
-
-    with open(path, "w") as f:
-        f.write(content)
-
-    return f"file at {path} changed"
-
-
-async def read_file_direct(agent, path: str):
-    with open(path, "r") as f:
-        content = f.read()
-
-    return f"file at {path}: {content}\n\n"
-
-
-async def read_files_direct(agent, paths: list):
-    content = ""
-    for path in paths:
-        content += await read_file_direct(agent, path)
-
-    return content
 
 
 async def replace_lines(agent, path: str, new_lines: list, start_line: int = 0, end_line: int = None):
@@ -68,6 +40,44 @@ async def replace_lines(agent, path: str, new_lines: list, start_line: int = 0, 
 
     return f"file at {path} changed"
 
+
+async def change_file(agent, path: str, new: str, old_string: str = "", old_regex: str = None):
+    with open(path, "r") as f:
+        content = f.read()
+
+    if old_regex:
+        content = re.sub(old_regex, new, content)
+    else:
+        content = content.replace(old_string, new)
+
+    with open(path, "w") as f:
+        f.write(content)
+
+    return f"file at {path} changed"
+
+
+async def read_file(agent: ChatAgent, path: str):
+    # check if file can be read
+    with open(path, "r") as f:
+        _ = f.read()
+
+    agent.add_memory_file(path)
+
+    return f"file at {path} memory\n"
+
+
+async def read_files(agent, paths: list):
+    content = ""
+    for path in paths:
+        content += await read_file(agent, path)
+
+    return content
+
+
+async def forget_file(agent: ChatAgent, path: str):
+    agent.remove_memory(path)
+
+    return f"file at {path} forgotten"
 
 async def replace_file(agent, path: str, content: str):
     if os.path.dirname(path):
@@ -125,7 +135,7 @@ tool_read_file = {
             },
         }
     },
-    "function": read_file_direct,
+    "function": read_file,
 }
 
 tool_read_files = {
@@ -150,7 +160,28 @@ tool_read_files = {
             },
         },
     },
-    "function": read_files_direct,
+    "function": read_files,
+}
+
+tool_forget_file = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "forget_file",
+            "description": "Forgets a file from memory (= will be removed from the chat)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "Path to forget, relative to the current working directory"
+                    }
+                },
+                "required": ["path"],
+            },
+        }
+    },
+    "function": forget_file,
 }
 
 tool_add_to_file = {

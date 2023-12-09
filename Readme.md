@@ -28,3 +28,7 @@ run the agent
 ```bash
 python3 main.py
 ```
+
+## Todo
+
+- [ ] add tool input to token count
