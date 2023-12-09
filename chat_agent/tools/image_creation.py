@@ -10,16 +10,27 @@ client = OpenAI(
 )
 
 
-async def create_images(agent, prompts: str, paths: str, model="dall-e-3"):
+async def create_images(agent, prompts: str, paths: str, model="dall-e-3", size="1024x1024"):
+    answer = ""
     for text, path in zip(prompts, paths):
-        await create_image(text, path, model)
+        answer += await create_image(text, path, model) + "\n"
+
+    return answer
 
 
-async def create_image(agent, prompt: str, path: str, model="dall-e-3"):
+async def create_image(agent, prompt: str, path: str, model="dall-e-3", size="1024x1024"):
+    allowed_sizes = {
+        "dall-e-2": ["256x256", "512x512", "1024x1024"],
+        "dall-e-3": ["1024x1024", "1792x1024", "1024x1792"]
+    }
+    # check if size is allowed
+    if size not in allowed_sizes[model]:
+        return "size not allowed for model " + model
+
     response = client.images.generate(
         model=model,
         prompt=prompt,
-        size="1024x1024",
+        size=size,
         quality="standard",
         n=1,
     )
@@ -35,7 +46,7 @@ async def create_image(agent, prompt: str, path: str, model="dall-e-3"):
     with open(path, "wb") as f:
         f.write(image)
 
-    return "image saved to " + path
+    return "image saved to " + path + " (url: " + image_url + ")"
 
 
 tool_create_image = {

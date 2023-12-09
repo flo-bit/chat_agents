@@ -23,12 +23,22 @@ install the requirements
 pip3 install -r requirements.txt
 ```
 
-run the agent
+add .env file with the following contents
 
 ```bash
-python3 main.py
+OPENAI_API_KEY=<your openai api key>
+
+# if you want to use the telegram bot
+TELEGRAM_TOKEN=<your telegram bot token, get one by writting @BotFather on Telegram>
+```
+
+run the agent, e.g. by using one of the quickstart scripts
+
+```bash
+python3 quickstarts/terminal_bot.py
 ```
 
 ## Todo
 
 - [ ] add tool input to token count
+- [ ] add better logging (LOGGING LEVELS)
