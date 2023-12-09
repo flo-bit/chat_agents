@@ -21,12 +21,12 @@ def transcribe(path: str, language: str = None, prompt: str = None):
     return transcript.text
 
 
-async def speech_to_text(path: str, language: str = None, prompt: str = None):
+async def speech_to_text(agent, path: str, language: str = None, prompt: str = None):
     content = transcribe(path, language, prompt)
     return f"speech to text transcription of file at {path}\nSTART\n{content}\nEND"
 
 
-async def speeches_to_texts(paths: list, language: str = None, no_prompt: bool = False):
+async def speeches_to_texts(agent, paths: list, language: str = None, no_prompt: bool = False):
     content = ""
     last_content = ""
     for path in paths:
@@ -37,12 +37,13 @@ async def speeches_to_texts(paths: list, language: str = None, no_prompt: bool =
 
     return content
 
-tool_speech_to_text = ({
-    "type": "function",
-    "function": {
-        "name": "speech_to_text",
-        "description": "Transcribes an audio file to text.",
-        "parameters": {
+tool_speech_to_text = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "speech_to_text",
+            "description": "Transcribes an audio file to text.",
+            "parameters": {
                 "type": "object",
                 "properties": {
                     "path": {
@@ -58,36 +59,41 @@ tool_speech_to_text = ({
                         "description": "optional prompt to use for transcription",
                     },
                 },
-            "required": ["text", "path"],
-        },
-    }
-}, speech_to_text)
-
-tool_speeches_to_texts = ({
-    "type": "function",
-    "function": {
-        "name": "speeches_to_texts",
-        "description": "Transcribes multiple audio files to text, will use the output of the previous file as prompt for the next file.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "paths": {
-                    "type": "array",
-                    "description": "Paths to audio files to transcribe, relative to the current working directory",
-                    "items": {
-                        "type": "string",
-                    }
-                },
-                "language": {
-                    "type": "string",
-                    "description": "optional 2 letter language code, of the language spoken in the audio files",
-                },
-                "no_prompt": {
-                    "type": "boolean",
-                    "description": "optional boolean, if true, will not use the output of the previous file as prompt for the next file.",
-                },
+                "required": ["text", "path"],
             },
-            "required": ["paths"],
-        },
-    }
-}, speeches_to_texts)
+        }
+    },
+    "function": speech_to_text,
+}
+
+tool_speeches_to_texts = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "speeches_to_texts",
+            "description": "Transcribes multiple audio files to text, will use the output of the previous file as prompt for the next file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "paths": {
+                        "type": "array",
+                        "description": "Paths to audio files to transcribe, relative to the current working directory",
+                        "items": {
+                            "type": "string",
+                        }
+                    },
+                    "language": {
+                        "type": "string",
+                        "description": "optional 2 letter language code, of the language spoken in the audio files",
+                    },
+                    "no_prompt": {
+                        "type": "boolean",
+                        "description": "optional boolean, if true, will not use the output of the previous file as prompt for the next file.",
+                    },
+                },
+                "required": ["paths"],
+            },
+        }
+    },
+    "function": speeches_to_texts,
+}

@@ -3,18 +3,23 @@ import json
 
 class ToolChain:
     # pass in a list of tuples of (tool_dict, function)
-    def __init__(self, tools, debug: bool = False, limit_return_value: int = 500) -> None:
-        # dict of tool name to tool function
-        self.methods = {}
-        # list of tool dicts
-        self.tool_dicts = []
+    def __init__(self, tools, debug: bool = False, limit_return_value: int = 500, agent=None) -> None:
+        # dict of tool name to tool object
+        self.tools = {}
+        # list of tool infos to pass to chatgpt
+        self.tool_info = []
 
-        for tool_dict, function in tools:
-            self.methods[tool_dict["function"]["name"]] = function
-            self.tool_dicts.append(tool_dict)
+        for tool in tools:
+            self.add_tool(tool)
 
         self.debug = debug
         self.limit_return_value = limit_return_value
+
+        self.agent = agent
+
+    def add_tool(self, tool):
+        self.tools[tool["info"]["function"]["name"]] = tool
+        self.tool_info.append(tool["info"])
 
     async def tool_call(self, toolcall):
         if self.debug:
@@ -31,10 +36,14 @@ class ToolChain:
             pass
 
         try:
+            method = self.tools[toolcall.function.name]["function"]
+            extra_args = self.tools[toolcall.function.name]["arguments"] if "arguments" in self.tools[
+                toolcall.function.name] else {}
+
             if is_json:
-                return_value = await self.methods[toolcall.function.name](**args)
+                return_value = await method(agent=self.agent, **args, **extra_args)
             else:
-                return_value = await self.methods[toolcall.function.name](args)
+                return_value = await method(args, agent=self.agent, **extra_args)
 
             if self.limit_return_value:
                 return_value = str(return_value)[-self.limit_return_value:]

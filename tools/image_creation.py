@@ -10,15 +10,15 @@ client = OpenAI(
 )
 
 
-async def create_images(texts: str, paths: str, model="dall-e-3"):
+async def create_images(agent, prompts: str, paths: str, model="dall-e-3"):
     for text, path in zip(texts, paths):
         await create_image(text, path, model)
 
 
-async def create_image(text: str, path: str, model="dall-e-3"):
+async def create_image(agent, prompt: str, path: str, model="dall-e-3"):
     response = client.images.generate(
         model=model,
-        prompt=text,
+        prompt=prompt,
         size="1024x1024",
         quality="standard",
         n=1,
@@ -38,9 +38,10 @@ async def create_image(text: str, path: str, model="dall-e-3"):
     return "image saved to " + path
 
 
-tool_create_image = ({
-    "type": "function",
-    "function": {
+tool_create_image = {
+    "info": {
+        "type": "function",
+        "function": {
             "name": "create_image",
             "description": "Creates a png image from given image prompt.",
             "parameters": {
@@ -61,18 +62,21 @@ tool_create_image = ({
                     },
                     "size": {
                         "type": "string",
-                        "description": "size of image to generate, defaults to 1024x1024",
-                        "enum": ["256x256", "512x512", "1024x1024"]
+                        "description": "size of image to generate, defaults to 1024x1024, valid values for dall-e-2: 256x256, 512x512, 1024x1024, valid values for dall-e-3: 1024x1024, 1792x1024, 1024x1792",
+                        "enum": ["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"]
                     }
                 },
                 "required": ["prompt", "path"],
             },
-    }
-}, create_image)
+        }
+    },
+    "function": create_image,
+}
 
-tool_create_images = ({
-    "type": "function",
-    "function": {
+tool_create_images = {
+    "info": {
+        "type": "function",
+        "function": {
             "name": "create_images",
             "description": "Creates png images from given image prompts.",
             "parameters": {
@@ -102,5 +106,7 @@ tool_create_images = ({
                 },
                 "required": ["prompts", "paths"],
             },
-    }
-}, create_images)
+        }
+    },
+    "function": create_images,
+}

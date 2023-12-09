@@ -10,7 +10,7 @@ client = OpenAI(
 )
 
 
-async def text_to_speech(text: str, path: str, model="tts-1", voice="alloy"):
+async def text_to_speech(agent, text: str, path: str, model="tts-1", voice="alloy"):
     if os.path.dirname(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
     response = client.audio.speech.create(
@@ -24,16 +24,17 @@ async def text_to_speech(text: str, path: str, model="tts-1", voice="alloy"):
     return "audio saved to " + path
 
 
-async def texts_to_speeches(texts: list, paths: list, model="tts-1", voice="alloy"):
+async def texts_to_speeches(agent, texts: list, paths: list, model="tts-1", voice="alloy"):
     output = ""
     for text, path in zip(texts, paths):
         output += await text_to_speech(text, path, model, voice) + "\n"
 
     return output
 
-tool_text_to_speech = ({
-    "type": "function",
-    "function": {
+tool_text_to_speech = {
+    "info": {
+        "type": "function",
+        "function": {
             "name": "text_to_speech",
             "description": "Creates an audio file from given text.",
             "parameters": {
@@ -60,12 +61,15 @@ tool_text_to_speech = ({
                 },
                 "required": ["text", "path"],
             },
-    }
-}, text_to_speech)
+        }
+    },
+    "function": text_to_speech,
+}
 
-tool_texts_to_speeches = ({
-    "type": "function",
-    "function": {
+tool_texts_to_speeches = {
+    "info": {
+        "type": "function",
+        "function": {
             "name": "texts_to_speeches",
             "description": "Creates audio files from given texts.",
             "parameters": {
@@ -98,5 +102,7 @@ tool_texts_to_speeches = ({
                 },
                 "required": ["texts", "paths"],
             },
-    }
-}, texts_to_speeches)
+        }
+    },
+    "function": texts_to_speeches,
+}

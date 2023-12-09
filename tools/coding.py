@@ -9,7 +9,7 @@ import subprocess
 import io
 
 
-async def execute_code(code: str):
+async def execute_python_code(agent, code: str):
     # we should do something like this to prevent malicious code execution
     # import builtins
     # safe_builtins = {name: getattr(builtins, name) for name in ['range', 'len', 'int', 'float', 'str']}
@@ -39,7 +39,7 @@ async def execute_code(code: str):
     return output_buffer.getvalue()
 
 
-def run_command(command: str):
+async def run_command(agent, command: str):
     process = subprocess.Popen(command.split(),
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
@@ -51,60 +51,104 @@ def run_command(command: str):
         return ('error', error.decode())
 
 
-def format_file(path: str):
-    return run_command(f"npx prettier {path} --write")
+async def format_file(agent, path: str):
+    return run_command(agent, f"npx prettier {path} --write")
 
 
-tool_execute_code = ({
-    "type": "function",
-    "function": {
-        "name": "execute_code",
-        "description": "Executes python code.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string",
-                    "description": "Code to execute",
+async def run_python_test(agent, path: str, test: str, class_name: str = "Tests"):
+    status, error = await run_command(agent, f"python3 {path} {class_name}.{test}")
+    print(status, error)
+    return status == 'ok'
+
+
+tool_execute_python_code = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "execute_python_code",
+            "description": "Executes python code.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string",
+                        "description": "Code to execute",
+                    },
                 },
+                "required": ["code"],
             },
-            "required": ["code"],
-        },
-    }
-}, execute_code)
+        }
+    },
+    "function": execute_python_code,
+}
 
-tool_format_file = ({
-    "type": "function",
-    "function": {
-        "name": "format_file",
-        "description": "Formats a file using prettier.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "Path to file to format, relative to the current working directory"
-                }
-            },
-            "required": ["path"],
-        },
-    }
-}, format_file)
-
-tool_run_command = ({
-    "type": "function",
-    "function": {
-        "name": "run_command",
-        "description": "Runs a command in the shell.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "command": {
-                    "type": "string",
-                    "description": "Command to run",
+tool_format_file = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "format_file",
+            "description": "Formats a file using prettier.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "Path to file to format, relative to the current working directory"
+                    }
                 },
+                "required": ["path"],
             },
-            "required": ["command"],
+        }
+    },
+    "function": format_file,
+}
+
+tool_run_command = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "run_command",
+            "description": "Runs a command in the shell.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "Command to run",
+                    },
+                },
+                "required": ["command"],
+            },
         },
-    }
-}, run_command)
+    },
+    "function": run_command,
+}
+
+tool_run_python_test = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "run_python_test",
+            "description": "Runs a python unit test.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "Path to test file the test is in, relative to the current working directory"
+                    },
+                    "test": {
+                        "type": "string",
+                        "description": "Name of the test to run"
+                    },
+                    "class_name": {
+                        "type": "string",
+                        "description": "Name of the test class, defaults to Tests"
+                    },
+                },
+                "required": ["path", "test"],
+            },
+        }
+    },
+    "function": run_python_test,
+}
