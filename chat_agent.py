@@ -23,12 +23,12 @@ class ChatAgent:
                  system_prompt: str = '',
                  chat_file: str = '',
                  log_file: str = '',
-                 reset_token_count: bool = False,
                  model: str = "gpt-4-1106-preview",
                  tools=None,
-                 answer_json=False,
-                 loop_function_call=True,
-                 debug=True):
+                 answer_json: bool = False,
+                 loop_function_call: bool = True,
+                 reset_token_count: bool = False,
+                 debug: bool = True):
         self.history = []
         self.system_prompt = system_prompt
         self.model = model
@@ -125,11 +125,12 @@ class ChatAgent:
         self.print('Received response!')
 
         if completion.choices[0].message.content:
-            self.all_time_tokens_output += len(
-                enc.encode(completion.choices[0].message.content))
+            output_tokens = len(enc.encode(
+                completion.choices[0].message.content))
 
+            self.all_time_tokens_output += output_tokens
             self.print(
-                f"output token count: {len(enc.encode(completion.choices[0].message.content))} ({self.all_time_tokens_output}) - current (total)")
+                f"output token count: {output_tokens} ({self.all_time_tokens_output}) - current (total)")
 
             self.add_message_to_history("assistant",
                                         completion.choices[0].message.content)

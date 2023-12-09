@@ -36,6 +36,7 @@ async def create_image(text: str, path: str, model="dall-e-3"):
 
     return "image saved to " + path
 
+
 tool_create_image = ({
     "type": "function",
     "function": {

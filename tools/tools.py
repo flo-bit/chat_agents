@@ -18,7 +18,7 @@ class ToolChain:
 
     async def tool_call(self, toolcall):
         if self.debug:
-            print('calling function', toolcall.function.name,
+            print('calling tool', toolcall.function.name,
                   toolcall.function.arguments)
 
         args = toolcall.function.arguments
@@ -39,11 +39,11 @@ class ToolChain:
             if self.limit_return_value:
                 return_value = str(return_value)[-self.limit_return_value:]
 
-            function_message = f"""Executed function call {toolcall.function.name}({args}). Response: {
+            function_message = f"""Executed tool call {toolcall.function.name}({args}). Response: {
                 return_value if (return_value is not None) else 'None'}."""
         except Exception as e:
             return_value = e
-            function_message = f"""Could not execute function call {
+            function_message = f"""Could not execute tool call {
                 toolcall.function.name}. Error: {return_value}."""
 
         if self.debug:
