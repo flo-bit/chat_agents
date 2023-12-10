@@ -31,15 +31,10 @@ class ChatAgent:
         if debug:
             self.config.debug = debug
 
-        if self.config.system_prompt:
-            self.history.append(
-                {"role": "system", "content": self.config.system_prompt})
-
         self.tools = ToolChain(
             self.config.tools, debug=self.config.debug, agent=self)
 
-        self.all_time_tokens_input = 0
-        self.all_time_tokens_output = 0
+        self.reset_costs()
 
         self.memory_files = self.config.start_memory_files
 
@@ -56,19 +51,35 @@ class ChatAgent:
         self.clear_history(save=False)
 
         if self.config.reset_token_count:
-            self.all_time_tokens_input = 0
-            self.all_time_tokens_output = 0
+            self.reset_costs()
 
         self.data = {}
 
         # clear memory will also save the agent
         self.clear_memory()
 
+    def reset_costs(self):
+        self.costs = {
+            "tokens_input": 0,
+            "tokens_output": 0,
+            "token_price_input": 0,
+            "token_price_output": 0,
+        }
+        if self.config.model == "gpt-4-1106-preview":
+            self.costs["token_price_input"] = 0.01 / 1000
+            self.costs["token_price_output"] = 0.03 / 1000
+        elif self.config.model == "gpt-4":
+            self.costs["token_price_input"] = 0.03 / 1000
+            self.costs["token_price_output"] = 0.06 / 1000
+        elif self.config.model == "gpt-4-32k":
+            self.costs["token_price_input"] = 0.06 / 1000
+            self.costs["token_price_output"] = 0.12 / 1000
+        elif self.config.model.startswith("gpt-3.5-turbo"):
+            self.costs["token_price_input"] = 0.001 / 1000
+            self.costs["token_price_output"] = 0.002 / 1000
+
     def clear_history(self, save: bool = True):
         self.history = []
-        if self.config.system_prompt:
-            self.history.append(
-                {"role": "system", "content": self.config.system_prompt})
         if save:
             self.try_save()
 
@@ -89,8 +100,7 @@ class ChatAgent:
             "config": config_dict,
             "memory_files": self.memory_files,
             "history": self.history,
-            "all_time_tokens_input": self.all_time_tokens_input,
-            "all_time_tokens_output": self.all_time_tokens_output
+            "costs": self.costs,
         }
 
         json_string = json.dumps(data, default=lambda x: x.__dict__)
@@ -129,8 +139,7 @@ class ChatAgent:
             self.config.tools, debug=self.config.debug, agent=self)
         self.memory_files = data["memory_files"]
         self.history = data["history"]
-        self.all_time_tokens_input = data["all_time_tokens_input"]
-        self.all_time_tokens_output = data["all_time_tokens_output"]
+        self.costs = data["costs"]
 
     def assign_tool_function(self, tool, custom_tools):
         name = tool["info"]["function"]["name"]
@@ -182,8 +191,13 @@ class ChatAgent:
 
         info += self.all_commands() + "\n"
 
-        info += f"Input token count: {self.all_time_tokens_input}\n"
-        info += f"Output token count: {self.all_time_tokens_output}\n"
+        input_tokens = self.costs["tokens_input"]
+        output_tokens = self.costs["tokens_output"]
+        price_input = self.costs["token_price_input"]
+        price_output = self.costs["token_price_output"]
+        info += f"Input token count: {input_tokens} ($ {round(input_tokens * price_input, 4)})\n"
+        info += f"Output token count: {output_tokens} ($ {round(output_tokens * price_output, 4)})\n"
+        info += f"Total token count: {input_tokens + output_tokens} ($ {round((input_tokens * price_input) + (output_tokens * price_output), 4)})\n"
 
         return info
 
@@ -221,6 +235,19 @@ class ChatAgent:
             string += "No messages yet"
         string += "\n\n"
         return string
+
+    def get_prompt_messages(self):
+        messages = self.history[-self.config.history_max_messages:]
+        # add system prompt at the beginning
+        if self.config.system_prompt:
+            messages.insert(0, {
+                "role": "system",
+                "content": self.config.system_prompt
+            })
+
+        self.add_memories_to_messages(messages)
+
+        return messages
 
     def log(self, message: str, level: str = "info"):
         if self.config.name:
@@ -304,20 +331,10 @@ class ChatAgent:
                 self.log(f"could not read memory file {memory_file}")
 
     async def react(self):
-        messages = self.history[-self.config.history_max_messages:]
-
-        self.add_memories_to_messages(messages)
+        messages = self.get_prompt_messages()
         self.log('Last message:')
-        self.log(messages[-1])
+        self.log(messages)
 
-        token_count = 0
-        for message in messages:
-            token_count += len(enc.encode(message['content']))
-
-        self.all_time_tokens_input += token_count
-
-        self.log(
-            f"input token count: {token_count} ({self.all_time_tokens_input}) - current (total)")
         self.log('Sending request...')
 
         response_format = {
@@ -330,14 +347,23 @@ class ChatAgent:
         )
         self.log('Received response!')
 
-        if completion.choices[0].message.content:
-            output_tokens = len(enc.encode(
-                completion.choices[0].message.content))
+        token_count = completion.usage.prompt_tokens
+        self.costs["tokens_input"] += token_count
+        tokens_input = self.costs["tokens_input"]
+        self.log(
+            f"input token count: {token_count} ({tokens_input}) - current (total)")
 
-            self.all_time_tokens_output += output_tokens
+        if token_count > self.config.warning_token_count:
             self.log(
-                f"output token count: {output_tokens} ({self.all_time_tokens_output}) - current (total)")
+                f"{token_count} tokens in input", "warning")
 
+        token_count = completion.usage.completion_tokens
+        self.costs["tokens_output"] += token_count
+        tokens_output = self.costs["tokens_output"]
+        self.log(
+            f"output token count: {token_count} ({tokens_output}) - current (total)")
+
+        if completion.choices[0].message.content:
             self.add_message_to_history("assistant",
                                         completion.choices[0].message.content)
 
@@ -348,10 +374,6 @@ class ChatAgent:
 
         if completion.choices[0].message.tool_calls and self.tools:
             for tool_call in completion.choices[0].message.tool_calls:
-                self.all_time_tokens_output += len(
-                    enc.encode(tool_call.function.name)) + len(
-                    enc.encode(tool_call.function.arguments))
-
                 function_message = await self.tools.tool_call(tool_call)
                 self.add_message_to_history("system", function_message)
 

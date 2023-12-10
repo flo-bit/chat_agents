@@ -108,15 +108,34 @@ Commands are used to get info about a agent or change it's behaviour, the defaul
 - `reset` - reset agent (clears chat history, files in memory, system prompt, data saved by tools)
 - `clear memory` - clear files in memory
 - `clear history` - clear chat history
+- `messages`- show all messages that will be sent with the next chat message
 
 
 ## Todo
 
-- [ ] add tool input to token count
-- [ ] add better logging (LOGGING LEVELS)
 - [ ] better documentation
 - [ ] prebuilt agents
 
+# Future tool ideas
+
+- wikipedia search
+- internet search
+- vector database (add, remove, update, search)
+- convert different file types (e.g. pdf to txt)
+- combine audio files
+- combine image + audio to video
+- combine video + audio to video
+- background removal from image
+- image face swap
+
+# Agent ideas
+
+- code review bot (review code, give feedback)
+- input image with person and get generated image with that person (using description)
+- create slideshows using sli.dev (markdown slideshows)
+- create simple games
+- create simple websites
+- create simple machine learning models
 
 ## License
 

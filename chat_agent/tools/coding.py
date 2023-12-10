@@ -61,7 +61,7 @@ async def format_file(agent, path: str):
 
 async def run_python_test(agent, path: str, test: str, class_name: str = "Tests"):
     status, error = await run_command(agent, f"python3 {path} {class_name}.{test}")
-    return status == 'ok'
+    return "Test passed" if status == "ok" else str(error)
 
 
 tool_execute_python_code = {

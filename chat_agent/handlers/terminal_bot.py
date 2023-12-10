@@ -9,7 +9,7 @@ load_dotenv()
 
 default_config = ChatAgentConfig(
     check_for_commands=True,
-    debug=True,
+    debug=False,
     tools=[tool_list_files, tool_read_file, tool_replace_file,
            tool_text_to_speech, tool_create_image],
     system_prompt="You are a helpful chat bot.")

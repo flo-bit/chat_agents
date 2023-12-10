@@ -42,6 +42,18 @@ def save(agent, message):
     else:
         return "No file name given"
 
+# shows the messages that will be sent with the next message
+
+
+def show_prompt_messages(agent, m):
+    messages = agent.get_prompt_messages()
+    string = "\n"
+    for message in messages:
+        string += f"\n\n> {message['role']}:\n{message['content']}"
+    if len(messages) == 0:
+        string += "No messages yet"
+    string += "\n\n"
+    return string
 
 def load(agent, message):
     # get file using regex
@@ -112,6 +124,11 @@ default_commands = [
         "name": "help",
         "function": help,
         "description": "- prints all available commands"
+    },
+    {
+        "name": "messages",
+        "function": show_prompt_messages,
+        "description": "- shows the messages that will be sent with the next message"
     }
 ]
 
@@ -140,7 +157,8 @@ class ChatAgentConfig:
                  save_file=None,
                  load_from_file=True,
                  save_to_file=True,
-                 tools=None):
+                 tools=None,
+                 warning_token_count=100000):
         self.name = name
         self.description = description
         self.system_prompt = system_prompt
@@ -169,3 +187,5 @@ class ChatAgentConfig:
         self.load_from_file = load_from_file
         self.save_to_file = save_to_file
         self.tools = tools or []
+
+        self.warning_token_count = warning_token_count
