@@ -1,4 +1,4 @@
-# python starter chatgpt
+# chat agents
 
 starter code for using chatgpt agents, includes:
 
@@ -257,6 +257,9 @@ config = ChatAgentConfig(tools=[tool_fibonacci])
 
 - [ ] better documentation
 - [ ] prebuilt agents
+- [ ] system prompt from file
+- [ ] replace tags in system prompt
+- [ ] system prompt from function
 
 # Future tool ideas
 

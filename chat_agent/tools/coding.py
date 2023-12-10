@@ -64,6 +64,14 @@ async def run_python_test(agent, path: str, test: str, class_name: str = "Tests"
     return "Test passed" if status == "ok" else str(error)
 
 
+async def see_git_diff(agent, path: str):
+    return await run_command(agent, f"git diff {path}")
+
+
+async def commit_all(agent, message: str):
+    return await run_command(agent, f"git commit -am '{message}'")
+
+
 tool_execute_python_code = {
     "info": {
         "type": "function",
@@ -154,4 +162,46 @@ tool_run_python_test = {
         }
     },
     "function": run_python_test,
+}
+
+tool_see_git_diff = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "see_git_diff",
+            "description": "Shows the git diff of a file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string",
+                        "description": "Path to file to show git diff of, relative to the current working directory"
+                    }
+                },
+                "required": ["path"],
+            },
+        }
+    },
+    "function": see_git_diff,
+}
+
+tool_commit_all = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "commit_all",
+            "description": "Commits all changes to git repository.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "Commit message"
+                    }
+                },
+                "required": ["message"],
+            },
+        }
+    },
+    "function": commit_all,
 }
