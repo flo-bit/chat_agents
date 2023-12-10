@@ -117,8 +117,8 @@ Commands are used to get info about a agent or change it's behaviour, the defaul
 The `ChatAgentConfig` class is used to configure the agent, it has the following arguments:
 
 - `commands` - list of commands, see `custom_command.py` for an example, default: `default_commands`
-- `tools` - list of tools, see `custom_tool.py` for an example, default: []
-- `debug` - debug logging to console, default: `False` can be turned on during chat with `debug on` command
+- `tools` - list of tools, see `custom_tool.py` for an example, default: `[]`
+- `debug` - debug logging to console, can also be turned on/off during chat with `debug on/off` command, default: `False`
 - `name` - name of the agent, default: `Chad`
 - `description` - description of the agent, default `None`
 - `model` - model to use, default: `gpt-4-1106-preview`
