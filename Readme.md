@@ -127,6 +127,8 @@ Commands are used to get info about a agent or change it's behaviour, the defaul
 - combine video + audio to video
 - background removal from image
 - image face swap
+- find right tool
+- find icon from list
 
 # Agent ideas
 

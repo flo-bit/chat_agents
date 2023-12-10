@@ -401,3 +401,25 @@ class ChatAgent:
         self.add_message_to_history(role, message)
 
         return await self.react()
+
+    async def single_prompt(self, prompt: str, role: Role = "user", output_json: bool = False, tools: list = None, model: str = None):
+        if not model:
+            model = self.config.model
+
+        response_format = {
+            "type": "json_object"} if output_json else None
+        completion = client.chat.completions.create(
+            model=model,
+            messages=[{"role": role, "content": prompt}],
+            response_format=response_format,
+            tools=tools
+        )
+
+        if output_json:
+            return json.loads(completion.choices[0].message.content)
+
+        if completion.choices[0].message.content:
+            return completion.choices[0].message.content
+
+        if completion.choices[0].message.tool_calls and self.tools:
+            return completion.choices[0].message.tool_calls

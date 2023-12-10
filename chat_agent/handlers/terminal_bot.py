@@ -1,11 +1,7 @@
 import asyncio
-from dotenv import load_dotenv
-
 from chat_agent import ChatAgent
 from chat_agent.chat_agent import ChatAgentConfig
 from chat_agent.tools import tool_list_files, tool_read_file, tool_replace_file, tool_text_to_speech, tool_create_image
-
-load_dotenv()
 
 default_config = ChatAgentConfig(
     check_for_commands=True,
