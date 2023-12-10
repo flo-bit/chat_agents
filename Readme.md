@@ -9,7 +9,7 @@ starter code for using chatgpt agents, includes:
 - some tools
 - agent communication
 - saving and loading agent from file
-- instruct through telegram or terminal
+- chat using telegram or terminal
 
 ## Usage
 
@@ -40,11 +40,73 @@ run the agent, e.g. by using one of the quickstart scripts:
 python3 quickstarts/terminal_bot.py
 ```
 
-### ChatAgentConfig
+## Tools
 
-### Sending Messages between Agents
+### Files
+
+> [!WARNING]
+> be very careful with these, Chad can really mess up your system with these, also don't share your bot with anyone if you use these (e.g. using telegram) as it's very easy to read out your OPENAI_API_KEY from the bot otherwise
+
+- Read files into memory (=> every chat processed will contain the file read from disk at the end, until removed)
+- Remove files from memory
+- Add to file (append to file on disk, appending at the end or at the beginning of the file)
+- replace lines of file from X to Y with new array of lines
+- Replace file with new file (replace file on disk with new file)
+- List files in folder (recursively)
+
+### Coding 
+
+> [!WARNING]
+> be very careful with these, Chad can really mess up your system with these, also don't share your bot with anyone if you use these (e.g. using telegram) as it's very easy to read out your OPENAI_API_KEY from the bot otherwise
+
+- run python code
+- run bash command
+- format file (uses `npx prettier`)
+- run python test method from class in file (unittests)
+
+### Image creation
+
+- Create image using dall-e-2 or dall-e-3 from a prompt, different sizes available
+- Create multiple images from multiple prompts
+
+### Send message
+
+- Send a message to another agent
+
+### Tasks
+
+- Create a task (task list is in ChatAgent memory)
+- Mark a task as done
+- Delete a task
+- List all tasks
+
+### Text to speech
+
+- Convert text to speech using openai tts, choose model and voice
+- Convert multiple texts to speeches
+
+### Speech to text
+
+- Convert speech to text using openai whisper
+- Convert multiple speeches to texts
+
+### Vision
+
+- Describe image using gpt-4 vision
+- Describe multiple images
 
 ## Todo
 
 - [ ] add tool input to token count
 - [ ] add better logging (LOGGING LEVELS)
+- [ ] better documentation
+- [ ] prebuilt agents
+
+
+## License
+
+MIT
+
+## Waranty
+
+None, use at your own risk
