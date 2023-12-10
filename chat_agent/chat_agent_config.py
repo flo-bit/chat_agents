@@ -91,7 +91,7 @@ class ChatAgentConfig:
                  all_time_tokens_output=0,
                  max_memory_files=3,
                  show_line_numbers=False,
-                 check_for_commands=False,
+                 check_for_commands=True,
                  save_file=None,
                  load_from_file=True,
                  save_to_file=True,

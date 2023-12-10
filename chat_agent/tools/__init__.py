@@ -6,11 +6,12 @@ from .text_to_speech import *
 from .speech_to_text import *
 from .tasks import *
 from .tools import *
+from .vision import *
 
 import importlib
 
 module_names = ['coding', 'files', 'image_creation', 'send_message',
-                'text_to_speech', 'speech_to_text', 'tasks', 'tools']
+                'text_to_speech', 'speech_to_text', 'tasks', 'tools', 'vision']
 tool_functions = {}
 
 for name in module_names:
@@ -18,6 +19,6 @@ for name in module_names:
     module = importlib.import_module('.' + name, package='chat_agent.tools')
 
     for item in dir(module):
-        if item.startswith('tool'):
+        if item.startswith('tool_'):
             tool = getattr(module, item)
             tool_functions[tool["info"]["function"]["name"]] = tool["function"]

@@ -12,6 +12,7 @@ load_dotenv()
 
 default_config = ChatAgentConfig(
     debug=False,
+    check_for_commands=False,
     tools=[tool_list_files, tool_read_file, tool_replace_file,
            tool_text_to_speech, tool_create_image],
     system_prompt="You are a helpful chat bot. When you want to send a file to the user, send a message with the link to the file (e.g. image, audio) in markdown format (e.g. [file](https://example.com/file.txt)) it will be removed from the message and sent as a file. If you are sending a local file, start the link with 'file://' e.g. 'file://path/to/file'")
@@ -48,7 +49,9 @@ class TelegramBot():
 
         msg = update.message.text
         agent = self.get_agent(chat_id)
-        # check if command
+
+        # check for command, we turned off check_for_commands in the config, so we need to check here
+        # as our system prompt may be returned as an answer and that f*cks up the link searching below otherwise
         answer = agent.check_for_commands(msg)
         if answer:
             await context.bot.send_message(chat_id=chat_id, text=answer)

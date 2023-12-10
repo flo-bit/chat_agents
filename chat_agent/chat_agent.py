@@ -104,13 +104,7 @@ class ChatAgent:
 
         # go through all tools and custom tools and find the right functions
         for tool in self.config.tools:
-            name = tool["info"]["function"]["name"]
-            if name in tool_functions:
-                tool["function"] = tool_functions[name]
-            else:
-                for custom_tool in custom_tools:
-                    if name == custom_tool["info"]["function"]["name"]:
-                        tool["function"] = custom_tool["function"]
+            self.assign_tool_function(tool, custom_tools)
 
         # go through all commands and find the right functions
         for command in self.config.commands:
@@ -124,6 +118,15 @@ class ChatAgent:
         self.history = data["history"]
         self.all_time_tokens_input = data["all_time_tokens_input"]
         self.all_time_tokens_output = data["all_time_tokens_output"]
+
+    def assign_tool_function(self, tool, custom_tools):
+        name = tool["info"]["function"]["name"]
+        if name in tool_functions:
+            tool["function"] = tool_functions[name]
+        else:
+            for custom_tool in custom_tools:
+                if name == custom_tool["info"]["function"]["name"]:
+                    tool["function"] = custom_tool["function"]
 
     def info(self):
         info = f"ChatAgent named {self.config.name}:\n\ndescription: {self.config.description or 'No description'}\nmodel: {self.config.model}\n\n"
