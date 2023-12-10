@@ -52,7 +52,7 @@ class TelegramBot():
 
         # check for command, we turned off check_for_commands in the config, so we need to check here
         # as our system prompt may be returned as an answer and that f*cks up the link searching below otherwise
-        answer = agent.check_for_commands(msg)
+        answer = await agent.check_for_commands(msg)
         if answer:
             await context.bot.send_message(chat_id=chat_id, text=answer)
             return

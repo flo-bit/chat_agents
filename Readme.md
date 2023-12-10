@@ -110,6 +110,148 @@ Commands are used to get info about a agent or change it's behaviour, the defaul
 - `clear history` - clear chat history
 - `messages`- show all messages that will be sent with the next chat message
 
+# Documentation
+
+## ChatAgentConfig
+
+The `ChatAgentConfig` class is used to configure the agent, it has the following arguments:
+
+- `commands` - list of commands, see `custom_command.py` for an example, default: `default_commands`
+- `tools` - list of tools, see `custom_tool.py` for an example, default: []
+- `debug` - debug logging to console, default: `False` can be turned on during chat with `debug on` command
+- `name` - name of the agent, default: `Chad`
+- `description` - description of the agent, default `None`
+- `model` - model to use, default: `gpt-4-1106-preview`
+- `system_prompt` - system prompt, default: `None`
+- `history_max_messages` - max number of messages to send with prompt, default: `10`
+- `answer_json` - if the answer should be json, default: `False`
+- `loop_function_call` - if the response of a function call should be inputed as a new prompt, default: `True`
+- `log_file` - log file, saving all logs to, default: `None`
+- `chat_file` - chat file, saving chat to, default: `None`
+- `start_memory_files` - files to start with in memory, default: `[]`
+- `always_in_memory_files` - files that should always be in memory, default: `[]`
+- `max_memory_files` - max number of files in memory (without always_in_memory_files), default: `3`, will remove oldest files first
+- `show_line_numbers` - show line numbers when sending chad a memory file, default: `False`
+- `check_for_commands` - check for commands in chat, default: `True`
+- `save_file` - file to save agent to, default: `None`
+- `load_from_file` - whether to load agent from save_file on startup, default: `True` (but only has an effect if save_file is given and exists)
+- `save_to_file` - whether to save agent to save_file on any change, default: `True` (but only has an effect if save_file is given)
+- `warning_token_count` - send a warning if the input token count is higher than this (in the last prompt), default: `100,000`
+
+
+## Handlers
+
+Handlers are used to get messages from the user to the agent and back. There are currently 3 handlers available:
+
+- `TerminalHandler` - used to chat with the agent in the terminal
+- `TelegramHandler` - used to chat with the agent using telegram
+- `WebHandler` - used to chat with the agent using a web interface (built with gradio)
+
+See how to use these handlers in the quickstart scripts.
+
+## Custom handler
+
+You need a custom handler if you want more than just one agent or if you want a different method of communication. If you just want different tools or commands, you can use the `ChatAgentConfig` class.
+
+See `custom_handler.py` for an example.
+
+1. Create a ChatAgent instance passing in an optional config
+2. Get a user question and call `await agent.send_message(question)` on the agent to get a response
+3. Repeat
+
+```python
+import asyncio
+from chat_agent import ChatAgent
+
+agent = ChatAgent()
+
+async def chat():
+    while True:
+        question = input("> ")
+        if question == "": # exit on empty input
+            break
+        answer = await agent.send_message(question)
+        print(answer)
+
+asyncio.run(chat())
+```
+
+## Custom commands
+
+See `custom_command.py` for an example.
+
+1. Create an async function that takes the agent and the message as arguments and returns a string
+2. Create a command definition with the following keys: `name`, `function`, `description`, `regex` (optional, if not given, the command will be matched by name)
+3. Add the command to the config
+
+```python
+from chat_agent import ChatAgentConfig, default_commands
+
+async def hello(agent, message):
+    return "Executing command!\nHello world!"
+
+# command definition: name, function, description, regex (optional)
+# if regex is not given, the command will be matched by name
+# description is used for the help command
+hello_command = {
+    "name": "hello",
+    "function": hello,
+    "description": "- greets the world",
+}
+
+# create a new config
+config = ChatAgentConfig(commands=default_commands + [hello_command])
+# use the config to create a new agent
+```
+
+## Custom tools
+
+See `custom_tool.py` for an example.
+
+1. Create an async function that takes the agent and some arguments as arguments and returns a string
+2. Create
+
+```python
+from chat_agent import ChatAgentConfig
+
+# has to be async and agent as argument
+async def fibonacci(agent, n):
+    if n < 0:
+        raise ValueError("Negative arguments not implemented")
+    if n <= 1:
+        return n
+    else:
+        return await fibonacci(agent, n-1) + await fibonacci(agent, n-2)
+
+# has to have the following keys: info, function
+# info should be the json schema that will be passed to the chatgpt api 
+# see existing tools for how this can look
+tool_fibonacci = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "fibonacci",
+            "description": "Calculates the n-th fibonacci number",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "n": {
+                        "type": "number",
+                        "description": "n-th fibonacci number to calculate"
+                    }
+                },
+                "required": ["n"],
+            },
+        }
+    },
+    "function": fibonacci,
+}
+
+config = ChatAgentConfig(tools=[tool_fibonacci])
+# use the config to create a new agent
+```
+
+
 
 ## Todo
 
@@ -138,6 +280,7 @@ Commands are used to get info about a agent or change it's behaviour, the defaul
 - create simple games
 - create simple websites
 - create simple machine learning models
+
 
 ## License
 

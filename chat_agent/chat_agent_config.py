@@ -1,37 +1,40 @@
 import re
-def reset(agent, message):
+
+
+async def reset(agent, message):
     agent.reset()
     return "Agent reset"
 
 
-def info(agent, message):
+async def info(agent, message):
     return agent.info()
 
 
-def history(agent, message):
+async def history(agent, message):
     return str(agent)
 
 
-def clear_memory(agent, message):
+async def clear_memory(agent, message):
     agent.clear_memory()
     return "Memory cleared"
 
 
-def clear_history(agent, message):
+async def clear_history(agent, message):
     agent.clear_history()
     return "History cleared"
 
-def read(agent, message):
+
+async def read(agent, message):
     agent.add_memory_file(message.split("read ")[1])
     return f"Added file {message.split('read ')[1]} to memory"
 
 
-def debug(agent, message):
+async def debug(agent, message):
     agent.set_debug("on" in message)
     return f"Debug mode {'on' if agent.config.debug else 'off'}"
 
 
-def save(agent, message):
+async def save(agent, message):
     # get file using regex
     file_name = re.match(r"save (\S*)", message)
     if file_name:
@@ -45,7 +48,7 @@ def save(agent, message):
 # shows the messages that will be sent with the next message
 
 
-def show_prompt_messages(agent, m):
+async def show_prompt_messages(agent, m):
     messages = agent.get_prompt_messages()
     string = "\n"
     for message in messages:
@@ -55,7 +58,8 @@ def show_prompt_messages(agent, m):
     string += "\n\n"
     return string
 
-def load(agent, message):
+
+async def load(agent, message):
     # get file using regex
     file_name = re.match(r"load (\S*)", message)
     if file_name:
@@ -66,7 +70,8 @@ def load(agent, message):
     else:
         return "No file name given"
 
-def help(agent, message):
+
+async def help(agent, message):
     return agent.all_commands()
 
 
@@ -135,7 +140,7 @@ default_commands = [
 
 class ChatAgentConfig:
     def __init__(self,
-                 name: str = 'ChatAgent',
+                 name: str = 'Chad',
                  description: str = '',
                  system_prompt: str = None,
                  model: str = "gpt-4-1106-preview",
@@ -149,8 +154,6 @@ class ChatAgentConfig:
                  commands: list = default_commands,
                  start_memory_files=None,
                  always_in_memory_files=None,
-                 all_time_tokens_input=0,
-                 all_time_tokens_output=0,
                  max_memory_files=3,
                  show_line_numbers=False,
                  check_for_commands=True,
@@ -178,8 +181,6 @@ class ChatAgentConfig:
         self.start_memory_files = start_memory_files or []
         self.always_in_memory_files = always_in_memory_files or []
 
-        self.all_time_tokens_input = all_time_tokens_input
-        self.all_time_tokens_output = all_time_tokens_output
         self.max_memory_files = max_memory_files
         self.show_line_numbers = show_line_numbers
 

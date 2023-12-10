@@ -380,7 +380,7 @@ class ChatAgent:
             if self.config.loop_function_call:
                 return await self.react()
 
-    def check_for_commands(self, message: str):
+    async def check_for_commands(self, message: str):
         if not self.config.commands:
             return False
 
@@ -388,13 +388,13 @@ class ChatAgent:
             regex = command["regex"] if "regex" in command else None
             if (regex and re.match(regex, message)) or (not regex and message == command["name"]):
                 self.log(f"command {command['name']} triggered")
-                return command["function"](self, message)
+                return await command["function"](self, message)
 
         return False
 
     async def send_message(self, message: str, role: Role = "user"):
         if self.config.check_for_commands and role == "user":
-            command = self.check_for_commands(message)
+            command = await self.check_for_commands(message)
             if command:
                 return command
 

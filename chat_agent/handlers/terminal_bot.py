@@ -4,7 +4,6 @@ from chat_agent.chat_agent import ChatAgentConfig
 from chat_agent.tools import tool_list_files, tool_read_file, tool_replace_file, tool_text_to_speech, tool_create_image
 
 default_config = ChatAgentConfig(
-    check_for_commands=True,
     debug=False,
     tools=[tool_list_files, tool_read_file, tool_replace_file,
            tool_text_to_speech, tool_create_image],
