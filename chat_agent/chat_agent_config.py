@@ -1,3 +1,4 @@
+import re
 def reset(agent, message):
     agent.reset()
     return "Agent reset"
@@ -16,6 +17,10 @@ def clear_memory(agent, message):
     return "Memory cleared"
 
 
+def clear_history(agent, message):
+    agent.clear_history()
+    return "History cleared"
+
 def read(agent, message):
     agent.add_memory_file(message.split("read ")[1])
     return f"Added file {message.split('read ')[1]} to memory"
@@ -25,6 +30,29 @@ def debug(agent, message):
     agent.set_debug("on" in message)
     return f"Debug mode {'on' if agent.config.debug else 'off'}"
 
+
+def save(agent, message):
+    # get file using regex
+    file_name = re.match(r"save (\S*)", message)
+    if file_name:
+        file_name = file_name.group(1)
+        agent.save_to_file(file_name)
+
+        return f"Saved agent to file {file_name}"
+    else:
+        return "No file name given"
+
+
+def load(agent, message):
+    # get file using regex
+    file_name = re.match(r"load (\S*)", message)
+    if file_name:
+        file_name = file_name.group(1)
+        agent.load_from_file(file_name)
+
+        return f"Loaded agent from file {file_name}"
+    else:
+        return "No file name given"
 
 def help(agent, message):
     return agent.all_commands()
@@ -52,10 +80,27 @@ default_commands = [
         "description": "- clears the memory of the chat agent"
     },
     {
+        "name": "clear history",
+        "function": clear_history,
+        "description": "- clears the history of the chat agent"
+    },
+    {
         "name": "read",
         "function": read,
         "description": "<file> - adds a file to the memory of the chat agent",
         "regex": "^read \S*$"
+    },
+    {
+        "name": "save",
+        "function": save,
+        "description": "<file> - saves the chat agent to a file",
+        "regex": "^save \S*$"
+    },
+    {
+        "name": "load",
+        "function": load,
+        "description": "<file> - loads the chat agent from a file",
+        "regex": "^load \S*$"
     },
     {
         "name": "debug",

@@ -50,12 +50,13 @@ class ToolChain:
 
             function_message = f"""Executed tool call {toolcall.function.name}({args}). Response: {
                 return_value if (return_value is not None) else 'None'}."""
+
+            self.agent.log(function_message)
         except Exception as e:
             return_value = e
             function_message = f"""Could not execute tool call {
                 toolcall.function.name}. Error: {return_value}."""
 
-        if self.debug:
-            print(function_message)
+            self.agent.log(function_message, 'error')
 
         return function_message

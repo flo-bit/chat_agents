@@ -24,6 +24,7 @@ async def execute_python_code(agent, code: str):
         try:
             exec(code)
         except Exception as e:
+            agent.log(f"Error during execution: {e}", 'error')
             return f"Error during execution: {e}\n"
 
     # Handle the last line for possible output
@@ -34,6 +35,7 @@ async def execute_python_code(agent, code: str):
             if result is not None:
                 output_buffer.write(str(result) + '\n')
         except Exception as e:
+            agent.log(f"Error on last line: {e}", 'error')
             output_buffer.write(f"Error on last line: {e}\n")
 
     return output_buffer.getvalue()
@@ -48,6 +50,8 @@ async def run_command(agent, command: str):
     if process.returncode == 0:
         return ('ok', content.decode())
     else:
+        agent.log(
+            f"Error running command {command}: {error.decode()}", 'error')
         return ('error', error.decode())
 
 
@@ -57,7 +61,6 @@ async def format_file(agent, path: str):
 
 async def run_python_test(agent, path: str, test: str, class_name: str = "Tests"):
     status, error = await run_command(agent, f"python3 {path} {class_name}.{test}")
-    print(status, error)
     return status == 'ok'
 
 

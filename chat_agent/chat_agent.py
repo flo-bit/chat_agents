@@ -5,6 +5,7 @@ from typing import Literal
 import tiktoken
 import json
 import re
+from colored import Fore, Style
 
 from chat_agent.chat_agent_config import ChatAgentConfig, default_commands
 from chat_agent.tools import ToolChain
@@ -52,10 +53,7 @@ class ChatAgent:
                 self.save_to_file(self.config.save_file)
 
     def reset(self):
-        self.history = []
-        if self.config.system_prompt:
-            self.history.append(
-                {"role": "system", "content": self.config.system_prompt})
+        self.clear_history(save=False)
 
         if self.config.reset_token_count:
             self.all_time_tokens_input = 0
@@ -65,6 +63,14 @@ class ChatAgent:
 
         # clear memory will also save the agent
         self.clear_memory()
+
+    def clear_history(self, save: bool = True):
+        self.history = []
+        if self.config.system_prompt:
+            self.history.append(
+                {"role": "system", "content": self.config.system_prompt})
+        if save:
+            self.try_save()
 
     def try_save(self):
         if self.config.save_file and self.config.save_to_file:
@@ -104,13 +110,20 @@ class ChatAgent:
 
         # go through all tools and custom tools and find the right functions
         for tool in self.config.tools:
-            self.assign_tool_function(tool, custom_tools)
+            if not self.assign_tool_function(tool, custom_tools):
+                # remove tool
+                name = tool["info"]["function"]["name"]
+                self.log(f"Could not add tool {name}, removing...", "warning")
+                self.config.tools.remove(tool)
 
         # go through all commands and find the right functions
         for command in self.config.commands:
-            for default_command in default_commands + custom_commands:
-                if command["name"] == default_command["name"]:
-                    command["function"] = default_command["function"]
+            if not self.assign_command_function(command, custom_commands):
+                # remove command
+                name = command["name"]
+                self.log(
+                    f"Could not add command {name}, removing...", "warning")
+                self.config.commands.remove(command)
 
         self.tools = ToolChain(
             self.config.tools, debug=self.config.debug, agent=self)
@@ -123,10 +136,20 @@ class ChatAgent:
         name = tool["info"]["function"]["name"]
         if name in tool_functions:
             tool["function"] = tool_functions[name]
+            return True
         else:
             for custom_tool in custom_tools:
                 if name == custom_tool["info"]["function"]["name"]:
                     tool["function"] = custom_tool["function"]
+                    return True
+        return False
+
+    def assign_command_function(self, command, custom_commands):
+        for default_command in default_commands + custom_commands:
+            if command["name"] == default_command["name"]:
+                command["function"] = default_command["function"]
+                return True
+        return False
 
     def info(self):
         info = f"ChatAgent named {self.config.name}:\n\ndescription: {self.config.description or 'No description'}\nmodel: {self.config.model}\n\n"
@@ -194,14 +217,21 @@ class ChatAgent:
         string = "\n"
         for message in self.history:
             string += f"\n\n> {message['role']}:\n{message['content']}"
+        if len(self.history) == 0:
+            string += "No messages yet"
         string += "\n\n"
         return string
 
-    def log(self, message: str):
+    def log(self, message: str, level: str = "info"):
         if self.config.name:
             message = f"{self.config.name}: {message}"
-        if self.config.debug:
-            print(message)
+        if self.config.debug or level == "warning" or level == "error":
+            if level == "warning":
+                print(Fore.YELLOW + message + Style.RESET)
+            elif level == "error":
+                print(Fore.RED + message + Style.RESET)
+            else:
+                print(message)
         if self.config.log_file:
             if os.path.dirname(self.config.log_file):
                 os.makedirs(os.path.dirname(
@@ -227,10 +257,11 @@ class ChatAgent:
 
         return False
 
-    def clear_memory(self):
+    def clear_memory(self, save: bool = True):
         self.memory_files = self.config.start_memory_files
 
-        self.try_save()
+        if save:
+            self.try_save()
 
     def remove_memory(self, path: str):
         if path in self.memory_files:

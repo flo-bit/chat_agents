@@ -95,6 +95,21 @@ python3 quickstarts/terminal_bot.py
 - Describe image using gpt-4 vision
 - Describe multiple images
 
+# Commands
+
+Commands are used to get info about a agent or change it's behaviour, the default commands are:
+
+- `help` - show help
+- `debug <on/off>` - set debug logging
+- `info` - show info about the agent (token count, files in memory, commands, system prompt, model)
+- `history` - show chat history
+- `save <file>` - save agent to file
+- `load <file>` - load agent from file (overwrites current agent, will not import custom tools and custom commands that are not in the current agent)
+- `reset` - reset agent (clears chat history, files in memory, system prompt, data saved by tools)
+- `clear memory` - clear files in memory
+- `clear history` - clear chat history
+
+
 ## Todo
 
 - [ ] add tool input to token count
