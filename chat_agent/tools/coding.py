@@ -41,8 +41,8 @@ async def execute_python_code(agent, code: str):
     return output_buffer.getvalue()
 
 
-async def run_command(agent, command: str):
-    process = subprocess.Popen(command.split(),
+async def run_command(agent, command: str, end: str = ""):
+    process = subprocess.Popen(command.split() + [end],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
     content, error = process.communicate()
@@ -69,7 +69,7 @@ async def see_git_diff(agent, path: str):
 
 
 async def commit_all(agent, message: str):
-    return await run_command(agent, f"git commit -am '{message}'")
+    return await run_command(agent, "git commit -am", f"'{message}'")
 
 
 tool_execute_python_code = {
