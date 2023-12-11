@@ -100,7 +100,7 @@ python3 quickstarts/terminal_bot.py
 Commands are used to get info about a agent or change it's behaviour, the default commands are:
 
 - `help` - show help
-- `debug <on/off>` - set debug logging
+- `log <debug/info/warning/error>` - set logging level
 - `info` - show info about the agent (token count, files in memory, commands, system prompt, model)
 - `history` - show chat history
 - `save <file>` - save agent to file
@@ -118,14 +118,14 @@ The `ChatAgentConfig` class is used to configure the agent, it has the following
 
 - `commands` - list of commands, see `custom_command.py` for an example, default: `default_commands`
 - `tools` - list of tools, see `custom_tool.py` for an example, default: `[]`
-- `debug` - debug logging to console, can also be turned on/off during chat with `debug on/off` command, default: `False`
+- `logging_level` - logging level to console, can also be set during chat with the `log` command, enum: `['debug', 'info', 'warning', 'error']` default: `info`
 - `name` - name of the agent, default: `Chad`
 - `description` - description of the agent, default `None`
 - `model` - model to use, default: `gpt-4-1106-preview`
 - `system_prompt` - system prompt, default: `None`
 - `history_max_messages` - max number of messages to send with prompt, default: `40`
 - `answer_json` - if the answer should be json, default: `False`
-- `loop_function_call` - if the response of a function call should be inputed as a new prompt, default: `True`
+- `loop_tool_call` - if the response of a tool call should be inputed as a new prompt, default: `True`
 - `log_file` - log file, saving all logs to, default: `None`
 - `chat_file` - chat file, saving chat to, default: `None`
 - `start_memory_files` - files to start with in memory, default: `[]`
@@ -137,7 +137,8 @@ The `ChatAgentConfig` class is used to configure the agent, it has the following
 - `load_from_file` - whether to load agent from save_file on startup, default: `True` (but only has an effect if save_file is given and exists)
 - `save_to_file` - whether to save agent to save_file on any change, default: `True` (but only has an effect if save_file is given)
 - `warning_token_count` - send a warning if the input token count is higher than this (in the last prompt), default: `100,000`
-
+- `max_tool_return_length` - how many characters a tool can return, default: `1000` (will show last 1000 characters of the tool return)
+- `always_in_memory_folders` - folders where the list of all the files in the folder should always be in memory, default: `[]`
 
 ## Handlers
 

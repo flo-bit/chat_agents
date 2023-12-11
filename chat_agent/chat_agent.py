@@ -399,7 +399,7 @@ class ChatAgent:
                 function_message = await self.tools.tool_call(tool_call)
                 self.add_message_to_history("system", function_message)
 
-            if self.config.loop_function_call:
+            if self.config.loop_tool_call:
                 return await self.react()
 
     async def check_for_commands(self, message: str):

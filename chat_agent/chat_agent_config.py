@@ -143,28 +143,37 @@ class ChatAgentConfig:
     def __init__(self,
                  name: str = 'Chad',
                  description: str = '',
+
                  system_prompt: str = None,
                  model: str = "gpt-4-1106-preview",
-                 history_max_messages: int = 40,
-                 logging_level: str = "info",
                  answer_json: bool = False,
-                 loop_function_call: bool = True,
-                 reset_token_count: bool = False,
+
+                 history_max_messages: int = 40,
+
+                 logging_level: str = "info",
+
                  log_file: str = None,
                  chat_file: str = None,
+
+                 show_line_numbers: bool = False,
+                 max_memory_files: int = 3,
+                 start_memory_files: list = None,
+                 always_in_memory_files: list = None,
+                 always_in_memory_folders: list = None,
+
+                 save_file: bool = None,
+                 load_from_file: bool = True,
+                 save_to_file: bool = True,
+
                  commands: list = default_commands,
-                 start_memory_files=None,
-                 always_in_memory_files=None,
-                 max_memory_files=3,
-                 show_line_numbers=False,
-                 check_for_commands=True,
-                 save_file=None,
-                 load_from_file=True,
-                 save_to_file=True,
-                 tools=None,
-                 warning_token_count=100000,
-                 always_in_memory_folders=None,
-                 max_tool_return_length=1000):
+                 check_for_commands: bool = True,
+                 reset_token_count: bool = False,
+
+                 tools: list = None,
+                 loop_tool_call: bool = True,
+                 max_tool_return_length=1000,
+
+                 warning_token_count: int = 100000,):
         self.name = name
         self.description = description
         self.system_prompt = system_prompt
@@ -174,7 +183,7 @@ class ChatAgentConfig:
         self.logging_level = logging_level
         self.logging_levels = ["debug", "info", "warning", "error"]
         self.answer_json = answer_json
-        self.loop_function_call = loop_function_call
+        self.loop_tool_call = loop_tool_call
         self.reset_token_count = reset_token_count
         self.log_file = log_file
         self.chat_file = chat_file
