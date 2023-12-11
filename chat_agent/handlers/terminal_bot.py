@@ -4,7 +4,6 @@ from chat_agent.chat_agent import ChatAgentConfig
 from chat_agent.tools import tool_list_files, tool_read_file, tool_replace_file, tool_text_to_speech, tool_create_image
 
 default_config = ChatAgentConfig(
-    debug=False,
     tools=[tool_list_files, tool_read_file, tool_replace_file,
            tool_text_to_speech, tool_create_image],
     system_prompt="You are a helpful chat bot.")
@@ -36,6 +35,7 @@ class TerminalBot():
             print("thinking...")
 
             answer = await self.agent.send_message(question)
-            print(answer)
+            if answer:
+                print(answer)
 
         print("Bye! See you soon!")

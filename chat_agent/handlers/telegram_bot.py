@@ -11,7 +11,6 @@ from chat_agent.tools import tool_list_files, tool_read_file, tool_replace_file,
 load_dotenv()
 
 default_config = ChatAgentConfig(
-    debug=False,
     check_for_commands=False,
     tools=[tool_list_files, tool_read_file, tool_replace_file,
            tool_text_to_speech, tool_create_image],

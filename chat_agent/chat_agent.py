@@ -5,11 +5,11 @@ from typing import Literal
 import tiktoken
 import json
 import re
-from colored import Fore, Style
 
 from chat_agent.chat_agent_config import ChatAgentConfig, default_commands
 from chat_agent.tools import ToolChain
-from chat_agent.tools import tool_functions
+from chat_agent.tools import tool_functions, list_files
+from colored import fore, back, style
 
 load_dotenv()
 
@@ -24,15 +24,11 @@ enc = tiktoken.encoding_for_model("gpt-4")
 
 class ChatAgent:
     def __init__(self,
-                 config: ChatAgentConfig = ChatAgentConfig(),
-                 debug: bool = None,):
+                 config: ChatAgentConfig = ChatAgentConfig()):
         self.history = []
         self.config = config
-        if debug:
-            self.config.debug = debug
 
-        self.tools = ToolChain(
-            self.config.tools, debug=self.config.debug, agent=self)
+        self.tools = ToolChain(self.config.tools, agent=self)
 
         self.reset_costs()
 
@@ -136,7 +132,7 @@ class ChatAgent:
                 self.config.commands.remove(command)
 
         self.tools = ToolChain(
-            self.config.tools, debug=self.config.debug, agent=self)
+            self.config.tools, agent=self)
         self.memory_files = data["memory_files"]
         self.history = data["history"]
         self.costs = data["costs"]
@@ -163,10 +159,7 @@ class ChatAgent:
     def info(self):
         info = f"ChatAgent named {self.config.name}:\n\ndescription: {self.config.description or 'No description'}\nmodel: {self.config.model}\n\n"
 
-        if self.config.debug:
-            info += "debug mode: on\n\n"
-        else:
-            info += "debug mode: off\n\n"
+        info += "logging level: " + self.config.logging_level + "\n\n"
 
         if self.config.system_prompt:
             info += f"system prompt: {self.config.system_prompt}\n\n"
@@ -247,18 +240,50 @@ class ChatAgent:
 
         self.add_memories_to_messages(messages)
 
+        if self.config.always_in_memory_folders:
+            self.add_folders_to_messages(
+                messages, self.config.always_in_memory_folders)
+
         return messages
 
-    def log(self, message: str, level: str = "info"):
+    def list_files(self, folder: str):
+        files = []
+        for root, _, filenames in os.walk(folder):
+            for filename in filenames:
+                files.append(os.path.join(root, filename))
+
+        return f"Files in {folder}:\n" + "\n".join(files)
+
+    def add_folders_to_messages(self, messages: list, folders: list):
+        for folder in folders:
+            messages.append(
+                {"role": "system", "content": f"START FOLDER CONTENT OF {folder}\n{self.list_files(folder)}\nEND FOLDER CONTENT OF {folder}"})
+
+    def log(self, message: str, level: str = "debug", color: str = None):
         if self.config.name:
             message = f"{self.config.name}: {message}"
-        if self.config.debug or level == "warning" or level == "error":
-            if level == "warning":
-                print(Fore.YELLOW + message + Style.RESET)
-            elif level == "error":
-                print(Fore.RED + message + Style.RESET)
-            else:
-                print(message)
+
+        # find index of logging_level
+        logging_levels = self.config.logging_levels
+        level = level.lower()
+        if level in logging_levels:
+            index = logging_levels.index(level)
+        else:
+            index = logging_levels.index("debug")
+
+        current_index = logging_levels.index(self.config.logging_level.lower())
+
+        if color:
+            print(fore(color.lower()), end='')
+        else:
+            print([style('reset'), fore('blue'),
+                  fore('yellow'), fore('red')][index], end='')
+        if index >= current_index:
+            print(message + style('reset'))
+
+        self.save_to_log_file(message)
+
+    def save_to_log_file(self, message: str):
         if self.config.log_file:
             if os.path.dirname(self.config.log_file):
                 os.makedirs(os.path.dirname(
@@ -266,6 +291,7 @@ class ChatAgent:
 
             with open(self.config.log_file, "a") as f:
                 f.write(message + "\n")
+
 
     def add_memory_file(self, path: str):
         self.memory_files.append(path)
@@ -296,10 +322,6 @@ class ChatAgent:
             self.try_save()
         else:
             raise FileNotFoundError(f"file {path} not in memory")
-
-    def set_debug(self, debug: bool):
-        self.config.debug = debug
-        self.tools.debug = debug
 
     def add_memories_to_messages(self, messages: list):
         for memory_file in self.memory_files:
@@ -387,7 +409,7 @@ class ChatAgent:
         for command in self.config.commands:
             regex = command["regex"] if "regex" in command else None
             if (regex and re.match(regex, message)) or (not regex and message == command["name"]):
-                self.log(f"command {command['name']} triggered")
+                self.log(f"command {command['name']} triggered", "info")
                 return await command["function"](self, message)
 
         return False

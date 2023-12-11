@@ -5,7 +5,6 @@ from chat_agent.tools import tool_list_files, tool_read_file, tool_replace_file,
 import gradio as gr
 
 default_config = ChatAgentConfig(
-    debug=False,
     tools=[tool_list_files, tool_read_file, tool_replace_file,
            tool_text_to_speech, tool_create_image],
     system_prompt="You are a helpful chat bot. When you want to send a file to the user, send a message with the link to the file (e.g. image, audio) in markdown format (e.g. [file](https://example.com/file.txt)). Local files are not supported, just tell the user the path and that they have to open it themselves")

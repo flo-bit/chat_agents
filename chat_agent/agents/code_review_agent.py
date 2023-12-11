@@ -1,4 +1,4 @@
-from chat_agent import ChatAgent, ChatAgentConfig
+from chat_agent import ChatAgentConfig
 from chat_agent.tools import tool_see_git_diff, tool_commit_all
 
 code_review_agent_config = ChatAgentConfig(

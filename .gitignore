@@ -1,3 +1,6 @@
 .env
 __pycache__/
 .venv/
+gmail_auth.json
+gmail_token.pickle
+test/

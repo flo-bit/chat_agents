@@ -7,11 +7,12 @@ from .speech_to_text import *
 from .tasks import *
 from .tools import *
 from .vision import *
+from .gmail import *
 
 import importlib
 
 module_names = ['coding', 'files', 'image_creation', 'send_message',
-                'text_to_speech', 'speech_to_text', 'tasks', 'tools', 'vision']
+                'text_to_speech', 'speech_to_text', 'tasks', 'tools', 'vision', 'gmail']
 tool_functions = {}
 
 for name in module_names:

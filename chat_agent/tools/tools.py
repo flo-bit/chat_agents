@@ -1,9 +1,14 @@
 import json
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from chat_agent import ChatAgent
+
 
 class ToolChain:
     # pass in a list of tuples of (tool_dict, function)
-    def __init__(self, tools, debug: bool = False, limit_return_value: int = 500, agent=None) -> None:
+    def __init__(self, tools, agent: "ChatAgent" = None) -> None:
         # dict of tool name to tool object
         self.tools = {}
         # list of tool infos to pass to chatgpt
@@ -12,9 +17,6 @@ class ToolChain:
         for tool in tools:
             self.add_tool(tool)
 
-        self.debug = debug
-        self.limit_return_value = limit_return_value
-
         self.agent = agent
 
     def add_tool(self, tool):
@@ -22,9 +24,10 @@ class ToolChain:
         self.tool_info.append(tool["info"])
 
     async def tool_call(self, toolcall):
-        if self.debug:
-            print('calling tool', toolcall.function.name,
-                  toolcall.function.arguments)
+        self.agent.log(
+            f"calling tool {toolcall.function.name}", "info", "blue")
+
+        self.agent.log(f"arguments: {toolcall.function.arguments}")
 
         args = toolcall.function.arguments
 
@@ -45,12 +48,14 @@ class ToolChain:
             else:
                 return_value = await method(args, agent=self.agent, **extra_args)
 
-            if self.limit_return_value:
-                return_value = str(return_value)[-self.limit_return_value:]
+            if self.agent.config.max_tool_return_length:
+                return_value = str(
+                    return_value)[-self.agent.config.max_tool_return_length:]
 
             function_message = f"""Executed tool call {toolcall.function.name}({args}). Response: {
                 return_value if (return_value is not None) else 'None'}."""
 
+            self.agent.log("tool call successfull", "info", "green")
             self.agent.log(function_message)
         except Exception as e:
             return_value = e

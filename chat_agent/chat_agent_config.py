@@ -29,9 +29,10 @@ async def read(agent, message):
     return f"Added file {message.split('read ')[1]} to memory"
 
 
-async def debug(agent, message):
-    agent.set_debug("on" in message)
-    return f"Debug mode {'on' if agent.config.debug else 'off'}"
+async def log_level(agent, message):
+    new_level = message.split("log ")[1]
+    agent.config.logging_level = new_level
+    return f"Logging level set to {new_level}"
 
 
 async def save(agent, message):
@@ -120,10 +121,10 @@ default_commands = [
         "regex": "^load \S*$"
     },
     {
-        "name": "debug",
-        "function": debug,
-        "description": "<on/off> - turns debug mode on or off",
-        "regex": "^debug (on|off)$"
+        "name": "log",
+        "function": log_level,
+        "description": "<debug/info/warning/error> - sets the logging level of the chat agent",
+        "regex": "^log (debug|info|warning|error)$"
     },
     {
         "name": "help",
@@ -144,8 +145,8 @@ class ChatAgentConfig:
                  description: str = '',
                  system_prompt: str = None,
                  model: str = "gpt-4-1106-preview",
-                 history_max_messages: int = 10,
-                 debug: bool = False,
+                 history_max_messages: int = 40,
+                 logging_level: str = "info",
                  answer_json: bool = False,
                  loop_function_call: bool = True,
                  reset_token_count: bool = False,
@@ -161,14 +162,17 @@ class ChatAgentConfig:
                  load_from_file=True,
                  save_to_file=True,
                  tools=None,
-                 warning_token_count=100000):
+                 warning_token_count=100000,
+                 always_in_memory_folders=None,
+                 max_tool_return_length=1000):
         self.name = name
         self.description = description
         self.system_prompt = system_prompt
         self.model = model
         self.history_max_messages = history_max_messages
 
-        self.debug = debug
+        self.logging_level = logging_level
+        self.logging_levels = ["debug", "info", "warning", "error"]
         self.answer_json = answer_json
         self.loop_function_call = loop_function_call
         self.reset_token_count = reset_token_count
@@ -180,6 +184,7 @@ class ChatAgentConfig:
 
         self.start_memory_files = start_memory_files or []
         self.always_in_memory_files = always_in_memory_files or []
+        self.always_in_memory_folders = always_in_memory_folders or []
 
         self.max_memory_files = max_memory_files
         self.show_line_numbers = show_line_numbers
@@ -188,5 +193,7 @@ class ChatAgentConfig:
         self.load_from_file = load_from_file
         self.save_to_file = save_to_file
         self.tools = tools or []
+
+        self.max_tool_return_length = max_tool_return_length
 
         self.warning_token_count = warning_token_count

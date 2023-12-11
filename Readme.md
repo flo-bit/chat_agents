@@ -123,7 +123,7 @@ The `ChatAgentConfig` class is used to configure the agent, it has the following
 - `description` - description of the agent, default `None`
 - `model` - model to use, default: `gpt-4-1106-preview`
 - `system_prompt` - system prompt, default: `None`
-- `history_max_messages` - max number of messages to send with prompt, default: `10`
+- `history_max_messages` - max number of messages to send with prompt, default: `40`
 - `answer_json` - if the answer should be json, default: `False`
 - `loop_function_call` - if the response of a function call should be inputed as a new prompt, default: `True`
 - `log_file` - log file, saving all logs to, default: `None`
@@ -260,20 +260,29 @@ config = ChatAgentConfig(tools=[tool_fibonacci])
 - [ ] system prompt from file
 - [ ] replace tags in system prompt
 - [ ] system prompt from function
+- [ ] multiuse.parallel tool
+- [ ] memory data (like memory files but data)
 
 # Future tool ideas
 
 - wikipedia search
 - internet search
 - vector database (add, remove, update, search)
-- convert different file types (e.g. pdf to txt)
+- convert different file types (e.g. pdf to txt [pdf to text done])
 - combine audio files
 - combine image + audio to video
 - combine video + audio to video
 - background removal from image
 - image face swap
-- find right tool
+- find right tool and add it to the agent
 - find icon from list
+- download file from url
+- upload file to url
+- google calendar
+- ical calendar
+- google drive
+- imap email
+- github api
 
 # Agent ideas
 
@@ -288,7 +297,3 @@ config = ChatAgentConfig(tools=[tool_fibonacci])
 ## License
 
 MIT
-
-## Waranty
-
-None, use at your own risk
