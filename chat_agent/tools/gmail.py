@@ -171,10 +171,10 @@ def read_message(service, id):
 
 
 def mark_as_read(service, ids):
-    return service.users().messages().modify.batchModify(
+    return service.users().messages().batchModify(
         userId='me',
         body={
-            'ids': [ids],
+            'ids': ids if isinstance(ids, list) else [ids],
             'removeLabelIds': ['UNREAD']
         }
     ).execute()
@@ -190,6 +190,10 @@ def email_to_string(id, email, thread_id=None, with_content=False):
         email_string += "\n"
     return email_string
 
+
+async def mark_email_as_read(agent, id):
+    mark_as_read(service, id)
+    return f"Email {id} marked as read"
 
 async def search_emails(agent, query):
     messages = search_messages(service, query)
@@ -305,4 +309,25 @@ tool_search_emails = {
         }
     },
     "function": search_emails,
+}
+
+tool_mark_email_as_read = {
+    "info": {
+        "type": "function",
+        "function": {
+            "name": "mark_email_as_read",
+            "description": "Mark an email as read in Gmail",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The gmail id of the email to mark as read",
+                    }
+                },
+                "required": ["id"],
+            },
+        }
+    },
+    "function": mark_email_as_read,
 }

@@ -8,7 +8,7 @@ import re
 
 from chat_agent.chat_agent_config import ChatAgentConfig, default_commands
 from chat_agent.tools import ToolChain
-from chat_agent.tools import tool_functions, list_files
+from chat_agent.tools import tool_functions
 from colored import fore, back, style
 
 load_dotenv()
